@@ -243,6 +243,44 @@ Response:
 {{end}}
 ```
 
+## Exchange Characters for Pulls Command (Optional)
+Trigger Type: `Regex`
+Trigger: `\Ag!tradein`
+
+Response:
+```go
+{{$args := parseArgs 2 "" 
+  (carg "int" "Amount" 1)
+  (carg "string" "Character")
+}}
+{{$amount := toFloat ($args.Get 0)}}
+{{$char := lower ($args.Get 1)}}
+{{$characterData := (dbGet 98116114 "newCharTestData").Value}}
+{{$validChars := cslice}}
+
+{{range $key, $_ := $characterData}}
+  {{$validChars = $validChars.Append (lower $key)}}
+{{end}}
+
+{{if not (in $validChars $char)}}
+  {{sendMessage nil "Invalid Character entered!\n-# Check `g!chars` for valid Characters"}}
+{{else if lt (toFloat ((dbGet .User.ID $char).Value)) $amount}}
+  {{$x := index $characterData $char}}
+  {{sendMessage nil (print "**Not enough " $x.name "'s for this trade-in!**\nYou only got `" (toInt ((dbGet .User.ID $char).Value)) "` " $x.name "'s!")}}
+{{else}}
+  {{$x := index $characterData $char}}
+  {{$pulls := mult $amount $x.worth}}
+  {{if ne (mod (mult $amount $x.worth) 1.0) 0.0}}
+    {{sendMessage nil (print "Amount (" $amount ") must result in a whole number of pulls! Your amount resulted in `" (printf "%.2f" $pulls) "` (`" $amount " x " (printf "%.2f" $x.worth) " = " (printf "%.2f" $pulls) "`)\nCheck `g!chars` for a list of character worths")}}
+    {{else if eq (mod (mult $amount $x.worth) 1.0) 0.0}}
+    {{$delChars := (print "-" $amount)}}
+    {{sendMessage nil (print "Exchange successful, converted `" $amount "` " $x.name "'s to Pulls! You now have `" (dbIncr .User.ID "pulls" $pulls) "` Pulls total and `" (dbIncr .User.ID $char $delChars) "` " $x.name "'s left in your Collection!")}}
+  {{else}}
+    {{sendMessage nil "Error encountered, please try again later"}}
+  {{end}}
+{{end}}
+```
+
 ## Gacha Commands Help Command
 Trigger Type: `Regex`
 Trigger: `\A(g!help|g!h|g!)\z`
