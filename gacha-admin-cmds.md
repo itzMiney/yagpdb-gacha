@@ -273,7 +273,7 @@ Response:
 
   "shima" (sdict "name" "Shima" "rarity" "Rare"
     "url" "https://static.wikia.nocookie.net/bocchi-the-rock/images/b/b6/Shima_Iwashita.png"
-    "color" 3636653 "weight" 7.5 "worth" 0.45)
+    "color" 3636653 "weight" 7.5 "worth" 0.5)
 
   "nijika" (sdict "name" "Nijika" "rarity" "Epic" 
     "url" "https://static.wikia.nocookie.net/bocchi-the-rock/images/9/92/Nijika_Ijichi_Character_Design_2.png" 
