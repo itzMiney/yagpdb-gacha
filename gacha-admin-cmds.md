@@ -261,59 +261,59 @@ Response:
 {{$characterData := sdict
   "bocchi" (sdict "name" "Bocchi" "rarity" "Common" 
     "url" "https://static.wikia.nocookie.net/bocchi-the-rock/images/9/98/Hitori_Gotoh_Character_Design_2.png" 
-    "color" 16746692 "weight" 40.0 "worth" "TBA")
+    "color" 16746692 "weight" 40.0 "worth" 0.1)
 
   "ryo" (sdict "name" "Ryo" "rarity" "Uncommon" 
     "url" "https://static.wikia.nocookie.net/bocchi-the-rock/images/4/4a/Ryo_Yamada_Character_Design_2.png" 
-    "color" 5921500 "weight" 15.0 "worth" "TBA")
+    "color" 5921500 "weight" 15.0 "worth" 0.2)
 
   "kita" (sdict "name" "Kita" "rarity" "Rare" 
     "url" "https://static.wikia.nocookie.net/bocchi-the-rock/images/a/a8/Ikuyo_Kita_Character_Design_2.png" 
-    "color" 14029630 "weight" 10.0 "worth" "TBA")
+    "color" 14029630 "weight" 10.0 "worth" 0.4)
 
   "shima" (sdict "name" "Shima" "rarity" "Rare"
     "url" "https://static.wikia.nocookie.net/bocchi-the-rock/images/b/b6/Shima_Iwashita.png"
-    "color" 3636653 "weight" 7.5 "worth" "TBA")
+    "color" 3636653 "weight" 7.5 "worth" 0.45)
 
   "nijika" (sdict "name" "Nijika" "rarity" "Epic" 
     "url" "https://static.wikia.nocookie.net/bocchi-the-rock/images/9/92/Nijika_Ijichi_Character_Design_2.png" 
-    "color" 16777023 "weight" 5.0 "worth" "TBA")
+    "color" 16777023 "weight" 5.0 "worth" 0.5)
 
   "jimihen" (sdict "name" "Jimihen" "rarity" "Epic"
     "url" "https://static.wikia.nocookie.net/bocchi-the-rock/images/3/31/Jimihen.png"
-    "color" 13609290 "weight" 4.5 "worth" "TBA")
+    "color" 13609290 "weight" 4.5 "worth" 1)
 
   "seika" (sdict "name" "Seika" "rarity" "Mythic" 
     "url" "https://static.wikia.nocookie.net/bocchi-the-rock/images/0/0e/Seika_Ijichi.png" 
-    "color" 14078853 "weight" 2.5 "worth" "TBA")
+    "color" 14078853 "weight" 2.5 "worth" 1)
 
   "yoyoko" (sdict "name" "Yoyoko" "rarity" "Mythic"
     "url" "https://static.wikia.nocookie.net/bocchi-the-rock/images/8/8d/EP10_Yoyoko_Ohtsuki.png"
-    "color" 5192485 "weight" 2.35 "worth" "TBA")
+    "color" 5192485 "weight" 2.35 "worth" 1)
 
   "eliza" (sdict "name" "Eliza" "rarity" "Mythic"
     "url" "https://static.wikia.nocookie.net/bocchi-the-rock/images/0/07/Eliza_Shimizu.png" 
-    "color" 16698767 "weight" 2.15 "worth" "TBA")
+    "color" 16698767 "weight" 2.15 "worth" 3)
 
   "pa-san" (sdict "name" "PA-San" "rarity" "Super Mythic" 
     "url" "https://static.wikia.nocookie.net/bocchi-the-rock/images/a/a2/PA-san.png"
-    "color" 1908021 "weight" 2.0 "worth" "TBA")
+    "color" 1908021 "weight" 2.0 "worth" 4)
 
   "yuyu" (sdict "name" "Yuyu" "rarity" "Super Mythic" 
     "url" "https://static.wikia.nocookie.net/bocchi-the-rock/images/3/35/Yuyucolor.png"
-    "color" 1837652 "weight" 1.7 "worth" "TBA") 
+    "color" 1837652 "weight" 1.7 "worth" 3) 
 
   "akubi" (sdict "name" "Akubi" "rarity" "Super Mythic"
     "url" "https://static.wikia.nocookie.net/bocchi-the-rock/images/d/d9/Akubicolor.png"
-    "color" 10581468 "weight" 1.5 "worth" "TBA")
+    "color" 10581468 "weight" 1.5 "worth" 5)
 
   "fuko" (sdict "name" "Fuko" "rarity" "Super Mythic"
     "url" "https://static.wikia.nocookie.net/bocchi-the-rock/images/5/57/Fuko_Honjo.png"
-    "color" 12095842 "weight" 1.3 "worth" "TBA")
+    "color" 12095842 "weight" 1.3 "worth" 5)
 
   "kikuri" (sdict "name" "Kikuri" "rarity" "Ultra Rare" 
     "url" "https://static.wikia.nocookie.net/bocchi-the-rock/images/8/88/Kikuri_Hiroi.png" 
-    "color" 8008351 "weight" 0.5 "worth" "TBA")
+    "color" 8008351 "weight" 0.5 "worth" 70)
 }}
 
 {{if eq $env "prod"}}
