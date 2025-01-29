@@ -236,9 +236,8 @@ Response:
 {{$target := userArg ($args.Get 0)}}
 {{if not (dbGet $target.ID "tradeOffer")}}
   {{sendMessage nil (print "**" $target.Globalname "** currently has no trade offers!")}}
-{{else if (dbGet .User.ID "tradeOffer")}}
-  {{sendMessage nil "Offer declined!"}}
-  {{execCC 105 nil 0 (sdict "targetID" .User.ID "context" "invalidated")}}
+{{else}}
+  {{execCC 105 nil 0 (sdict "targetID" $target.ID "context" "invalidated")}}
   {{sendMessage nil (print "Removed trade offer for **" $target.Globalname "**")}}
 {{end}}
 ```
