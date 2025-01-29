@@ -239,7 +239,7 @@ Response:
 {{else if (dbGet .User.ID "tradeOffer")}}
   {{sendMessage nil "Offer declined!"}}
   {{execCC 105 nil 0 (sdict "targetID" .User.ID "context" "invalidated")}}
-  {{sendMessage nil (print "Reset trade offers for **" $target.Globalname "**")}}
+  {{sendMessage nil (print "Removed trade offer for **" $target.Globalname "**")}}
 {{end}}
 ```
 
