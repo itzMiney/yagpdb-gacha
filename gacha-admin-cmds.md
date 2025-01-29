@@ -224,9 +224,9 @@ Response:
 {{end}}
 ```
 
-## Admin reset Trade Command
+## Admin invalidate Trade Command
 Trigger Type: `Regex`
-Trigger: `\Aga!resettrade`
+Trigger: `\Aga!remtrade`
 
 Response:
 ```go
@@ -234,12 +234,13 @@ Response:
   (carg "user" "User")
 }}
 {{$target := userArg ($args.Get 0)}}
-{{dbDel $target.ID "tradeOffer"}}
-{{dbDel $target.ID "tradeChar"}}
-{{dbDel $target.ID "tradeAmount"}}
-{{dbDel $target.ID "tradePrice"}}
-{{dbDel $target.ID "tradeInitiator"}}
-{{sendMessage nil (print "Reset trade offers for **" $target.Globalname "**")}}
+{{if not (dbGet $target.ID "tradeOffer")}}
+  {{sendMessage nil (print "**" $target.Globalname "** currently has no trade offers!")}}
+{{else if (dbGet .User.ID "tradeOffer")}}
+  {{sendMessage nil "Offer declined!"}}
+  {{execCC 105 nil 0 (sdict "targetID" .User.ID "context" "invalidated")}}
+  {{sendMessage nil (print "Reset trade offers for **" $target.Globalname "**")}}
+{{end}}
 ```
 
 # Add/Update Characters Command
