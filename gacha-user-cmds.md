@@ -334,34 +334,43 @@ Response:
 {{$price := toInt ($args.Get 3)}}
 {{$targetPulls := toInt ((dbGet ($target.ID) "pulls").Value)}}
 {{$characterData := (dbGet 98116114 "characterData").Value}}
-{{$validChars := cslice}}
+{{$nonLowerChar := index $characterData $char}}
+{{$charName := (index $nonLowerChar "name")}}
 
+{{$validChars := cslice}}
 {{range $key, $_ := $characterData}}
   {{$validChars = $validChars.Append (lower $key)}}
 {{end}}
 
-{{if .User.Bot}}
-	{{sendMessage nil "Can't trade with bots!"}}
+{{if $target.Bot}}
+  {{sendMessage nil "Can't trade with bots!"}}
 {{else if lt $targetPulls $price}}
-	{{sendMessage nil (print "**" $target.Globalname "** doesn't have enough pulls for this trade!")}}
+  {{sendMessage nil (print "**" $target.Globalname "** doesn't have enough pulls for this trade!")}}
 {{else if not (in $validChars $char)}}
-	{{sendMessage nil "Invalid Character entered!\n-# Check `g!chars` for valid Characters"}}
+  {{sendMessage nil "Invalid Character entered!\n-# Check `g!chars` for valid Characters"}}
 {{else if not (dbGet .User.ID $char)}}
-	{{sendMessage nil (print "You don't have any " $char "'s!")}}
+  {{sendMessage nil (print "You don't have any " $charName "'s!")}}
 {{else if lt (toInt ((dbGet .User.ID $char).Value)) $amount}}
-	{{sendMessage nil (print "You don't have enough " $char "'s for this trade offer!")}}
+  {{sendMessage nil (print "You don't have enough " $charName "'s for this trade offer!")}}
 {{else if (dbGet $target.ID "tradeOffer")}}
-	{{sendMessage nil (print $target.Globalname " already has a trade offer pending!")}}
+  {{sendMessage nil (print $target.Globalname " already has a trade offer pending!")}}
 {{else}}
-	{{$nonLowerChar := index $characterData $char}}
-	{{$charName := (index $nonLowerChar "name")}}
-	{{sendMessage nil (print $target.Mention ", you just got a trade offer from " .User.Mention "!\nThey want to trade `" $amount "` " $charName "'s with you in exchange for `" $price "` pulls!\n:warning: **Offer will expire <t:" (currentTime.Add (toDuration "10m")).Unix ":R>**\n-# Use `g!trade accept` to accept or `g!trade decline` to decline the offer")}}
-  {{sendMessage nil "https://tenor.com/view/trade-offer-gif-22327121"}}
+  {{$tradeOffer := sendMessageRetID nil (print 
+    $target.Mention ", you just got a trade offer from " .User.Mention "!\n"
+    "They want to trade `" $amount "` " $charName "'s with you in exchange for `" $price "` pulls!\n"
+    ":warning: **Offer will expire <t:" (currentTime.Add (toDuration "10m")).Unix ":R>**\n"
+    "-# Use `g!trade accept` to accept or `g!trade decline` to decline the offer"
+  )}} {{sendMessage nil "https://tenor.com/view/trade-offer-gif-22327121"}}
+
   {{dbSetExpire $target.ID "tradeOffer" 1 600}}
-	{{dbSetExpire $target.ID "tradeChar" $char 600}}
-	{{dbSetExpire $target.ID "tradeAmount" $amount 600}}
-	{{dbSetExpire $target.ID "tradePrice" $price 600}}
-	{{dbSetExpire $target.ID "tradeInitiator" .User.ID 600}}
+  {{dbSetExpire $target.ID "tradeChar" $char 600}}
+  {{dbSetExpire $target.ID "tradeAmount" $amount 600}}
+  {{dbSetExpire $target.ID "tradePrice" $price 600}}
+  {{dbSetExpire $target.ID "tradeInitiator" .User.ID 600}}
+  {{dbSetExpire $target.ID "tradeChannelID" (toString .Channel.ID) 600}}
+  {{dbSetExpire $target.ID "tradeMessageID" (toString $tradeOffer) 600}}
+
+  {{execCC 105 nil 600 (sdict "targetID" $target.ID "tradeChar" $char "tradeAmount" $amount "tradePrice" $price "tradeInitiator" .User.ID "context" "expired" "tradeChannelID" (toString .Channel.ID) "tradeMessageID" (toString $tradeOffer))}}
 {{end}}
 ```
 
@@ -385,22 +394,15 @@ Response:
 	{{sendMessage nil "You currently have no trade offers!"}}
 {{else if lt $targetPulls $price}}
 	{{sendMessage nil "Not enough pulls for trade offer! Deleting offer..."}}
-	{{dbDel .User.ID "tradeOffer"}}
-	{{dbDel .User.ID "tradeChar"}}
-	{{dbDel .User.ID "tradeAmount"}}
-	{{dbDel .User.ID "tradePrice"}}
-	{{dbDel .User.ID "tradeInitiator"}}
+	{{execCC 105 nil 0 (sdict "targetID" .User.ID "context" "invalidated")}}
 {{else if lt $initiatorChars $amount}}
 	{{sendMessage nil (print "**" $initiator.Globalname "** doesn't have enough" $char "'s for this trade anymore! Deleting offer...")}}
+	{{execCC 105 nil 0 (sdict "targetID" .User.ID "context" "invalidated")}}
 {{else if (dbGet .User.ID "tradeOffer")}}
 	{{$nonLowerChar := index $characterData $char}}
 	{{$charName := (index $nonLowerChar "name")}}
 	{{sendMessage nil (print "Transfer successful, gave `" $amount "` " $charName "'s to **" .User.Globalname "** for `" $price "` pulls! You now have `" (dbIncr .User.ID "pulls" $pullsDel) "` pulls and `" (dbIncr .User.ID $char $amount) "` " $charName "'s\n" $initiator.Globalname " now has `" (dbIncr $initiator.ID "pulls" $price) "` pulls and has `" (dbIncr $initiator.ID $char $charsDel) "` " $charName "'s left!")}}
-	{{dbDel .User.ID "tradeOffer"}}
-	{{dbDel .User.ID "tradeChar"}}
-	{{dbDel .User.ID "tradeAmount"}}
-	{{dbDel .User.ID "tradePrice"}}
-	{{dbDel .User.ID "tradeInitiator"}}
+	{{execCC 105 nil 0 (sdict "targetID" .User.ID "context" "accepted")}}
 {{end}}
 ```
 
@@ -414,11 +416,7 @@ Response:
 {{sendMessage nil "You currently have no trade offers!"}}
 {{else if (dbGet .User.ID "tradeOffer")}}
 {{sendMessage nil "Offer declined!"}}
-{{dbDel .User.ID "tradeOffer"}}
-{{dbDel .User.ID "tradeChar"}}
-{{dbDel .User.ID "tradeAmount"}}
-{{dbDel .User.ID "tradePrice"}}
-{{dbDel .User.ID "tradeInitiator"}}
+{{execCC 105 nil 0 (sdict "targetID" .User.ID "context" "declined")}}
 {{end}}
 ```
 
@@ -428,14 +426,41 @@ Trigger: `\Ag!chars\z`
 
 Response:
 ```go
-{{$rewards := (dbGet 98116114 "characterData").Value}}
+{{$data := (dbGet 98116114 "characterData").Value}}
+{{$fields := cslice}}
 
-{{$response := "**Valid Characters:**\n\n"}}
-{{range $rewards}}
-  {{$response = print $response "`" .name "`    "}}
+{{$charlist := cslice}}
+{{range $key, $char := $data}}
+    {{$charlist = $charlist.Append (dict
+      "name" $char.name
+      "rarity" $char.rarity
+      "weight" $char.weight
+      "worth" $char.worth
+    )}}
 {{end}}
 
-{{$message := sendMessageRetID nil $response}}
+{{range $i, $el := $charlist}}
+  {{range $j, $el2 := $charlist}}
+    {{if and (gt (index $el "weight") (index $el2 "weight")) (lt $i $j)}}
+      {{$tmp := index $charlist $i}}
+      {{$charlist.Set $i (index $charlist $j)}}
+      {{$charlist.Set $j $tmp}}
+    {{end}}
+  {{end}}
+{{end}}
+
+{{range $charlist}}
+  {{$fields = $fields.Append (sdict
+    "name" " "
+    "value" (print "-# " .rarity "\n**" .name "** (`" .weight "%`)\nWorth: `" .worth "` Pulls")
+    "inline" true
+  )}}
+{{end}}
+{{$message := sendMessageRetID nil (cembed
+  "title" "Valid Characters"
+  "color" 8008351
+  "fields" $fields
+)}}
 {{deleteTrigger 15}}
 {{deleteMessage nil $message 15}}
 ```
@@ -454,4 +479,60 @@ Response:
 `g!trade decline` - Decline someone's trade!
 {{deleteTrigger 15}}
 {{deleteResponse 15}}
+```
+
+## Trade Offer Closing Handler
+Trigger Type: `None`
+
+Response:
+```go
+{{$target := userArg .ExecData.targetID}}
+{{$initiator := or (userArg .ExecData.tradeInitiator) (userArg (dbGet $target.ID "tradeInitiator").Value)}}
+{{$char := or .ExecData.tradeChar (dbGet $target.ID "tradeOffer").Value}}
+{{$amount := or .ExecData.tradeAmount (dbGet $target.ID "tradeAmount").Value}}
+{{$price := or .ExecData.tradePrice (dbGet $target.ID "tradeAmount").Value}}
+
+{{$channelID := or (toInt .ExecData.tradeChannelID) (toInt (dbGet $target.ID "tradeChannelID").Value)}}
+{{$messageID := or (toInt .ExecData.tradeMessageID) (toInt (dbGet $target.ID "tradeMessageID").Value)}}
+
+{{$characterData := (dbGet 98116114 "characterData").Value}}
+{{$nonLowerChar := index $characterData $char}}
+{{$charName := (index $nonLowerChar "name")}}
+
+{{$context := .ExecData.context}}
+
+{{$editedMessage := print
+  "~~" $target.Mention ", you just got a trade offer from " $initiator.Mention "!~~\n"
+  "~~They want to trade `" $amount "` " $charName "'s with you in exchange for `" $price "` pulls!~~\n"
+  "**Offer expired**"
+}}
+
+{{if eq $context "accepted"}}
+  {{$editedMessage = print
+    "~~" $target.Mention ", you just got a trade offer from " $initiator.Mention "!~~\n"
+    "~~They want to trade `" $amount "` " $charName "'s with you in exchange for `" $price "` pulls!~~\n"
+    "**Offer accepted**"
+  }}
+{{else if eq $context "declined"}}
+  {{$editedMessage = print
+    "~~" $target.Mention ", you just got a trade offer from " $initiator.Mention "!~~\n"
+    "~~They want to trade `" $amount "` " $charName "'s with you in exchange for `" $price "` pulls!~~\n"
+    "**Offer declined**"
+  }}
+{{else if eq $context "invalidated"}}
+  {{$editedMessage = print
+    "~~" $target.Mention ", you just got a trade offer from " $initiator.Mention "!~~\n"
+    "~~They want to trade `" $amount "` " $charName "'s with you in exchange for `" $price "` pulls!~~\n"
+    "**Offer invalidated**"
+  }}
+{{end}}
+
+{{editMessage $channelID $messageID $editedMessage}}
+{{dbDel $target.ID "tradeOffer"}}
+{{dbDel $target.ID "tradeChar"}}
+{{dbDel $target.ID "tradeAmount"}}
+{{dbDel $target.ID "tradePrice"}}
+{{dbDel $target.ID "tradeInitiator"}}
+{{dbDel $target.ID "tradeChannelID"}}
+{{dbDel $target.ID "tradeMessageID"}}
 ```
