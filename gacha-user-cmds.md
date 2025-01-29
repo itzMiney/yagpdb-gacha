@@ -361,6 +361,7 @@ Response:
     ":warning: **Offer will expire <t:" (currentTime.Add (toDuration "10m")).Unix ":R>**\n"
     "-# Use `g!trade accept` to accept or `g!trade decline` to decline the offer"
   )}} {{sendMessage nil "https://tenor.com/view/trade-offer-gif-22327121"}}
+  {{dbDel $target.ID "tradeClosed"}}
 
   {{dbSetExpire $target.ID "tradeOffer" 1 600}}
   {{dbSetExpire $target.ID "tradeChar" $char 600}}
@@ -527,12 +528,56 @@ Response:
   }}
 {{end}}
 
-{{editMessage $channelID $messageID $editedMessage}}
-{{dbDel $target.ID "tradeOffer"}}
-{{dbDel $target.ID "tradeChar"}}
-{{dbDel $target.ID "tradeAmount"}}
-{{dbDel $target.ID "tradePrice"}}
-{{dbDel $target.ID "tradeInitiator"}}
-{{dbDel $target.ID "tradeChannelID"}}
-{{dbDel $target.ID "tradeMessageID"}}
+{{$target := userArg .ExecData.targetID}}
+{{$initiator := or (userArg .ExecData.tradeInitiator) (userArg (dbGet $target.ID "tradeInitiator").Value)}}
+{{$char := or .ExecData.tradeChar (dbGet $target.ID "tradeOffer").Value}}
+{{$amount := or .ExecData.tradeAmount (dbGet $target.ID "tradeAmount").Value}}
+{{$price := or .ExecData.tradePrice (dbGet $target.ID "tradeAmount").Value}}
+
+{{$channelID := or (toInt .ExecData.tradeChannelID) (toInt (dbGet $target.ID "tradeChannelID").Value)}}
+{{$messageID := or (toInt .ExecData.tradeMessageID) (toInt (dbGet $target.ID "tradeMessageID").Value)}}
+
+{{$characterData := (dbGet 98116114 "characterData").Value}}
+{{$nonLowerChar := index $characterData $char}}
+{{$charName := (index $nonLowerChar "name")}}
+
+{{$context := .ExecData.context}}
+
+{{$editedMessage := print
+  "~~" $target.Mention ", you just got a trade offer from " $initiator.Mention "!~~\n"
+  "~~They want to trade `" $amount "` " $charName "'s with you in exchange for `" $price "` pulls!~~\n"
+  "**Offer expired**"
+}}
+
+{{if eq $context "accepted"}}
+  {{$editedMessage = print
+    "~~" $target.Mention ", you just got a trade offer from " $initiator.Mention "!~~\n"
+    "~~They want to trade `" $amount "` " $charName "'s with you in exchange for `" $price "` pulls!~~\n"
+    "**Offer accepted**"
+  }}
+{{else if eq $context "declined"}}
+  {{$editedMessage = print
+    "~~" $target.Mention ", you just got a trade offer from " $initiator.Mention "!~~\n"
+    "~~They want to trade `" $amount "` " $charName "'s with you in exchange for `" $price "` pulls!~~\n"
+    "**Offer declined**"
+  }}
+{{else if eq $context "invalidated"}}
+  {{$editedMessage = print
+    "~~" $target.Mention ", you just got a trade offer from " $initiator.Mention "!~~\n"
+    "~~They want to trade `" $amount "` " $charName "'s with you in exchange for `" $price "` pulls!~~\n"
+    "**Offer invalidated**"
+  }}
+{{end}}
+
+{{if not (dbGet $target.ID "tradeClosed")}}
+  {{editMessage $channelID $messageID $editedMessage}}
+  {{dbSetExpire $target.ID "tradeClosed" 600}}
+  {{dbDel $target.ID "tradeOffer"}}
+  {{dbDel $target.ID "tradeChar"}}
+  {{dbDel $target.ID "tradeAmount"}}
+  {{dbDel $target.ID "tradePrice"}}
+  {{dbDel $target.ID "tradeInitiator"}}
+  {{dbDel $target.ID "tradeChannelID"}}
+  {{dbDel $target.ID "tradeMessageID"}}
+{{end}}
 ```
